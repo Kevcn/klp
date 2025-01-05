@@ -1,4 +1,4 @@
-import os
+from chromadb.config import Settings
 from typing import List
 from langchain_core.documents import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -8,13 +8,12 @@ from langchain_community.document_loaders.firecrawl import FireCrawlLoader
 
 # For Chroma & GPT4AllEmbeddings
 from langchain_community.embeddings import GPT4AllEmbeddings
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 
 
 def load_and_process_url(url: str) -> List[Document]:
     """
     Load and process a URL using FireCrawlLoader.
-    Crawls up to 5 pages at depth 1.
     """
     loader = FireCrawlLoader(
         url=url,
@@ -25,7 +24,7 @@ def load_and_process_url(url: str) -> List[Document]:
 
 def split_documents(documents: List[Document]) -> List[Document]:
     """
-    Split documents into smaller chunks.
+    Split documents into chunks.
     """
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=250,
@@ -36,7 +35,8 @@ def split_documents(documents: List[Document]) -> List[Document]:
     return splitter.split_documents(documents)
 
 
-def setup_vectorstore(documents: list[Document]) -> Chroma:
+def setup_vectorstore(documents: List[Document]) -> Chroma:
+
     # Filter out non-primitive metadata from each document
     filtered_docs = []
 
@@ -62,14 +62,29 @@ def setup_vectorstore(documents: list[Document]) -> Chroma:
             print(f"Skipping non-Document or missing metadata: {doc}")
 
 
-    """Create and persist a Chroma vector store from documents."""
+    """
+    Create a remote Chroma vector store from the given documents.
+    Connects to a Chroma server running in a Docker container at localhost:8000.
+    """
+
+    # 1) Create the embedding function
     embeddings = GPT4AllEmbeddings()
-    return Chroma.from_documents(
-        documents=filtered_docs,
-        embedding=embeddings,
-        persist_directory="./chroma_db"
+
+    # 2) Configure remote Chroma client settings (REST-based)
+    chroma_settings = Settings(
+        chroma_api_impl="chromadb.api.fastapi.FastAPI",
+        chroma_server_host="localhost",  # Or IP of your Docker host
+        chroma_server_http_port="8000"  # Matching your Docker port mapping
     )
 
+    vectorstore = Chroma.from_documents(
+        documents=filtered_docs,
+        collection_name="test_store",
+        client_settings=chroma_settings,
+        embedding=embeddings
+    )
+
+    return vectorstore
 
 
 def main():

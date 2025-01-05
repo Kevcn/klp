@@ -1,4 +1,5 @@
 import numpy as np
+from chromadb.config import Settings
 from typing import TypedDict, List
 from langchain_core.documents import Document
 from langchain_core.output_parsers import StrOutputParser
@@ -55,10 +56,17 @@ def retrieve_until_relevant(state: RAGState) -> RAGState:
     Retrieve documents from Chroma. If the top-k docs don't seem relevant,
     try retrieving with a larger k, up to max_attempts.
     """
-    embeddings = GPT4AllEmbeddings()
+
+    chroma_settings = Settings(
+        chroma_api_impl="chromadb.api.fastapi.FastAPI",
+        chroma_server_host="localhost",  # Or IP of your Docker host
+        chroma_server_http_port="8000"  # Matching your Docker port mapping
+    )
+    
     vectorstore = Chroma(
         persist_directory="./chroma_db",
-        embedding_function=embeddings
+        embedding_function=GPT4AllEmbeddings(),
+        client_settings=chroma_settings
     )
 
     max_attempts = 5    # How many times to retry with bigger k

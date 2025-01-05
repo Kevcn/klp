@@ -1,0 +1,3 @@
+- Spin up Chroma DB - docker-compose up -d
+- Run python ingest.py for creating embeddings
+- Run python query.py to test it out
