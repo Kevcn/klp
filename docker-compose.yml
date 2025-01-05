@@ -1,0 +1,55 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: vadatabase
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
+
+  vectoradmin:
+    image: mintplexlabs/vectoradmin
+    container_name: vectoradmin_container
+    restart: always
+    environment:
+      SERVER_PORT: "3001"
+      JWT_SECRET: "random-string"
+      INNGEST_EVENT_KEY: "background_workers"
+      INNGEST_SIGNING_KEY: "random-string"
+      INNGEST_LANDING_PAGE: "true"
+      DATABASE_CONNECTION_STRING: "postgresql://admin:admin_password@postgres:5432/vdbms"
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+
+  chroma_db:
+    image: chromadb/chroma
+    container_name: chroma
+    ports:
+      - "8000:8000"
+    environment:
+      CHROMA_PORT: 8000
+      CHROMA_LOG_LEVEL: INFO
+volumes:
+  postgres_data:

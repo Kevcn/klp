@@ -41,8 +41,8 @@ def load_and_process_url(url: str) -> list[Document]:
 def split_documents(documents: list[Document]) -> list[Document]:
     """Split documents into smaller chunks."""
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,
-        chunk_overlap=50,
+        chunk_size=200,
+        chunk_overlap=20,
         length_function=len,
         is_separator_regex=False,
     )

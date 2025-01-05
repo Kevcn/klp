@@ -28,8 +28,8 @@ def split_documents(documents: List[Document]) -> List[Document]:
     Split documents into smaller chunks.
     """
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,
-        chunk_overlap=50,
+        chunk_size=250,
+        chunk_overlap=10,
         length_function=len,
         is_separator_regex=False,
     )
